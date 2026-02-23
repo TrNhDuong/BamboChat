@@ -3,7 +3,8 @@ import type { Message } from '../types';
 import { conversationAPI } from '../services/api';
 import { getSocket } from '../services/socket';
 import MessageBubble from './MessageBubble';
-import { ClockIcon, WaveIcon, SendIcon } from './Icons';
+import { ClockIcon, WaveIcon, SendIcon, UserPlusIcon } from './Icons';
+import AddMember from './AddMember';
 import './ChatWindow.css';
 
 interface ChatWindowProps {
@@ -28,6 +29,7 @@ const ChatWindow = ({
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [typingUsers, setTypingUsers] = useState<string[]>([]);
+    const [showAddMember, setShowAddMember] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -177,7 +179,29 @@ const ChatWindow = ({
                         <div className="online-status">Active now</div>
                     )}
                 </div>
+                {!isDirectMessage && (
+                    <button
+                        className="header-action-btn"
+                        title="Thêm thành viên"
+                        onClick={() => setShowAddMember(true)}
+                    >
+                        <UserPlusIcon size={20} />
+                    </button>
+                )}
             </div>
+
+            {showAddMember && conversationId && (
+                <AddMember
+                    conversationId={conversationId}
+                    existingParticipantIds={participants.map(p => p._id)}
+                    onClose={() => setShowAddMember(false)}
+                    onSuccess={() => {
+                        // Normally we'd refresh participants, but they'll get added via socket eventually
+                        // For now just hide
+                        setShowAddMember(false);
+                    }}
+                />
+            )}
 
             <div className="message-list">
                 {hasMore && messages.length > 0 && (

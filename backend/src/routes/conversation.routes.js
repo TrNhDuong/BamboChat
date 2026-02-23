@@ -16,4 +16,7 @@ router.get('/', conversationController.getConversations);
 // GET /api/conversations/:id/messages
 router.get('/:id/messages', conversationController.getMessages);
 
+// POST /api/conversations/:id/participants
+router.post('/:id/participants', conversationController.addParticipants);
+
 module.exports = router;

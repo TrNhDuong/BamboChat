@@ -93,3 +93,18 @@ export const SmileyIcon = ({ size = 20, ...props }: IconProps) => (
         <line x1="15" y1="9" x2="15.01" y2="9" />
     </svg>
 );
+
+export const PlusIcon = ({ size = 20, ...props }: IconProps) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+);
+export const UserPlusIcon = ({ size = 20, ...props }: IconProps) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="8.5" cy="7" r="4" />
+        <line x1="20" y1="8" x2="20" y2="14" />
+        <line x1="17" y1="11" x2="23" y2="11" />
+    </svg>
+);

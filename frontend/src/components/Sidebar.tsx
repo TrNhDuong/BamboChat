@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Conversation } from '../types';
-import { BambooIcon, SettingsIcon, SearchIcon, ChatIcon } from './Icons';
+import { BambooIcon, SettingsIcon, SearchIcon, ChatIcon, PlusIcon } from './Icons';
 import ProfileEdit from './ProfileEdit';
+import CreateGroup from './CreateGroup';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -11,6 +12,7 @@ interface SidebarProps {
     activeTab: 'chats' | 'friends';
     onTabChange: (tab: 'chats' | 'friends') => void;
     userId: string;
+    onRefreshConversations: () => void;
 }
 
 const Sidebar = ({
@@ -20,9 +22,11 @@ const Sidebar = ({
     activeTab,
     onTabChange,
     userId,
+    onRefreshConversations,
 }: SidebarProps) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showProfileEdit, setShowProfileEdit] = useState(false);
+    const [showCreateGroup, setShowCreateGroup] = useState(false);
 
     const getConversationName = (conv: Conversation) => {
         if (conv.type === 'group' && conv.name) return conv.name;
@@ -76,6 +80,12 @@ const Sidebar = ({
         return name.includes(searchQuery.toLowerCase());
     });
 
+    const handleCreateSuccess = (conversationId: string) => {
+        setShowCreateGroup(false);
+        onRefreshConversations();
+        onSelectConversation(conversationId);
+    };
+
     return (
         <div className="sidebar">
             <div className="sidebar-header">
@@ -109,18 +119,27 @@ const Sidebar = ({
             </div>
 
             {/* Filter tabs */}
-            <div className="sidebar-tabs">
+            <div className="sidebar-tabs-container">
+                <div className="sidebar-tabs">
+                    <button
+                        className={`sidebar-tab ${activeTab === 'chats' ? 'active' : ''}`}
+                        onClick={() => onTabChange('chats')}
+                    >
+                        Tất cả
+                    </button>
+                    <button
+                        className={`sidebar-tab ${activeTab === 'friends' ? 'active' : ''}`}
+                        onClick={() => onTabChange('friends')}
+                    >
+                        Bạn bè
+                    </button>
+                </div>
                 <button
-                    className={`sidebar-tab ${activeTab === 'chats' ? 'active' : ''}`}
-                    onClick={() => onTabChange('chats')}
+                    className="create-group-btn"
+                    title="Tạo nhóm mới"
+                    onClick={() => setShowCreateGroup(true)}
                 >
-                    Tất cả
-                </button>
-                <button
-                    className={`sidebar-tab ${activeTab === 'friends' ? 'active' : ''}`}
-                    onClick={() => onTabChange('friends')}
-                >
-                    Bạn bè
+                    <PlusIcon size={16} />
                 </button>
             </div>
 
@@ -159,6 +178,12 @@ const Sidebar = ({
             )}
 
             {showProfileEdit && <ProfileEdit onClose={() => setShowProfileEdit(false)} />}
+            {showCreateGroup && (
+                <CreateGroup
+                    onClose={() => setShowCreateGroup(false)}
+                    onSuccess={handleCreateSuccess}
+                />
+            )}
         </div>
     );
 };

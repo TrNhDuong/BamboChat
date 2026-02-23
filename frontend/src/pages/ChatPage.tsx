@@ -119,6 +119,7 @@ const ChatPage = () => {
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 userId={user?._id || ''}
+                onRefreshConversations={loadConversations}
             />
 
             <div className="chat-main">

@@ -63,6 +63,39 @@ class ConversationService {
     async getUserConversations(userId) {
         return conversationRepository.findUserConversations(userId);
     }
+
+    /**
+     * Add participants to an existing group conversation.
+     */
+    async addParticipants(requesterId, conversationId, participantIds) {
+        const conversation = await conversationRepository.findById(conversationId);
+        if (!conversation) {
+            throw { status: 404, message: 'Conversation not found' };
+        }
+
+        if (conversation.type !== 'group') {
+            throw { status: 400, message: 'Can only add participants to group conversations' };
+        }
+
+        // Ensure requester is a participant (simple authorization)
+        const isParticipant = await participantRepository.findByConversationAndUser(conversationId, requesterId);
+        if (!isParticipant) {
+            throw { status: 403, message: 'You are not a member of this conversation' };
+        }
+
+        const addedParticipants = [];
+        for (const userId of participantIds) {
+            // Check if already a participant
+            const existing = await participantRepository.findByConversationAndUser(conversationId, userId);
+            if (!existing) {
+                const p = await participantRepository.create({ conversationId, userId });
+                addedParticipants.push(p);
+            }
+        }
+
+        logger.info(`Participants added to conversation ${conversationId}`, { requesterId, addedCount: addedParticipants.length });
+        return { success: true, addedCount: addedParticipants.length };
+    }
 }
 
 module.exports = new ConversationService();

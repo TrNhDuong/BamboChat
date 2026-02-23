@@ -42,10 +42,38 @@ const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbl
         return acc;
     }, {});
 
+    const reactionIcon = (
+        <div className="message-action-overlay">
+            <button
+                className={`reaction-trigger-btn ${showPicker ? 'active' : ''}`}
+                onClick={() => setShowPicker(!showPicker)}
+            >
+                <SmileyIcon size={13} />
+            </button>
+            {showPicker && (
+                <div className="reaction-picker">
+                    {REACTION_TYPES.map((r) => (
+                        <button
+                            key={r.type}
+                            className="reaction-option"
+                            onClick={() => handleReaction(r.type)}
+                            title={r.type}
+                        >
+                            {r.emoji}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
+    const timeLabel = (
+        <span className="message-time-outside">{formatTime(message.createdAt)}</span>
+    );
+
     return (
-        <div
-            className={`message-bubble-wrapper ${isSent ? 'sent' : 'received'} ${showAvatar ? 'has-avatar' : ''}`}
-        >
+        <div className={`message-bubble-wrapper ${isSent ? 'sent' : 'received'} ${showAvatar ? 'has-avatar' : ''}`}>
+            {/* Avatar for received messages */}
             {!isSent && (
                 <div className="message-avatar-container">
                     {showAvatar ? (
@@ -58,32 +86,15 @@ const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbl
                 </div>
             )}
 
+            {/* For sent: Time → Icon → Bubble */}
+            {isSent && timeLabel}
+            {isSent && reactionIcon}
+
+            {/* Bubble */}
             <div className="message-content-container">
-                <div className="message-action-overlay">
-                    <button
-                        className={`reaction-trigger-btn ${showPicker ? 'active' : ''}`}
-                        onClick={() => setShowPicker(!showPicker)}
-                    >
-                        <SmileyIcon size={14} />
-                    </button>
-                    {showPicker && (
-                        <div className="reaction-picker">
-                            {REACTION_TYPES.map((r) => (
-                                <button
-                                    key={r.type}
-                                    className="reaction-option"
-                                    onClick={() => handleReaction(r.type)}
-                                    title={r.type}
-                                >
-                                    {r.emoji}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
                 <div className="message-bubble">
+                    {!isSent && senderName && <div className="sender-name">{senderName}</div>}
                     <div>{message.content}</div>
-                    <div className="message-time">{formatTime(message.createdAt)}</div>
 
                     {Object.keys(reactionGroups).length > 0 && (
                         <div className="message-reactions">
@@ -97,6 +108,10 @@ const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbl
                     )}
                 </div>
             </div>
+
+            {/* For received: Bubble → Icon → Time */}
+            {!isSent && reactionIcon}
+            {!isSent && timeLabel}
         </div>
     );
 };

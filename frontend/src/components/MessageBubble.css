@@ -1,7 +1,9 @@
 .message-bubble-wrapper {
     display: flex;
-    margin-bottom: 3px;
-    padding: 0 16px;
+    align-items: center;
+    margin-bottom: 2px;
+    padding: 1px 16px;
+    gap: 6px;
     animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -11,7 +13,6 @@
 
 .message-bubble-wrapper.received {
     justify-content: flex-start;
-    gap: 8px;
 }
 
 .message-avatar-container {
@@ -42,14 +43,13 @@
 
 /* Bubbles */
 .message-bubble {
-    max-width: 60%;
-    padding: 8px 14px;
-    font-size: 0.9rem;
-    line-height: 1.45;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    line-height: 1.4;
     word-wrap: break-word;
     word-break: break-word;
     position: relative;
-    border-radius: 18px;
+    border-radius: 16px;
 }
 
 .message-bubble-wrapper.sent .message-bubble {
@@ -68,23 +68,22 @@
 }
 
 .message-bubble-wrapper.has-avatar {
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
-.message-time {
-    font-size: 0.65rem;
-    margin-top: 4px;
-    opacity: 0;
-    text-align: right;
-    transition: opacity var(--transition);
-}
-
-.message-bubble-wrapper.sent .message-time {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.message-bubble-wrapper.received .message-time {
+/* Time outside the bubble */
+.message-time-outside {
+    font-size: 0.62rem;
     color: var(--text-muted);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.message-bubble-wrapper:hover .message-time-outside {
+    opacity: 0.75;
 }
 
 @keyframes fadeIn {
@@ -116,37 +115,15 @@
 
 .message-content-container {
     position: relative;
-    max-width: 60%;
-    display: flex;
-    flex-direction: column;
+    max-width: 60vw;
 }
 
-.message-bubble-wrapper.sent .message-content-container {
-    align-items: flex-end;
-}
-
-.message-bubble-wrapper.received .message-content-container {
-    align-items: center;
-    /* Center vertically */
-    flex-direction: row-reverse;
-    /* Bubble then Trigger */
-    gap: 24px;
-}
-
-.message-bubble-wrapper.sent .message-content-container {
-    align-items: center;
-    /* Center vertically */
-    flex-direction: row;
-    /* Trigger then Bubble (since right-aligned) */
-    gap: 24px;
-}
-
-.message-bubble-wrapper.sent .message-bubble {
-    max-width: 100%;
-}
-
-.message-bubble-wrapper.received .message-bubble {
-    max-width: 100%;
+.sender-name {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    text-transform: capitalize;
 }
 
 /* Action Overlay (Trigger Button) */
@@ -156,6 +133,7 @@
     opacity: 0;
     transition: opacity 0.2s;
     position: relative;
+    flex-shrink: 0;
 }
 
 .message-bubble-wrapper:hover .message-action-overlay {

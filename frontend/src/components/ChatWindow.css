@@ -97,6 +97,28 @@
     font-weight: 500;
 }
 
+.header-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.header-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--bambo-green);
+    border-color: var(--bambo-green);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
 .chat-header-actions {
     display: flex;
     gap: 4px;

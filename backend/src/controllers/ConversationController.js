@@ -49,6 +49,22 @@ class ConversationController {
             next(error);
         }
     }
+
+    async addParticipants(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { participantIds } = req.body;
+
+            if (!participantIds || !Array.isArray(participantIds)) {
+                return res.status(400).json({ message: 'participantIds array is required' });
+            }
+
+            const result = await conversationService.addParticipants(req.user.userId, id, participantIds);
+            return res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new ConversationController();

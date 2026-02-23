@@ -95,13 +95,39 @@
 }
 
 /* ─── Filter tabs ─── */
+.sidebar-tabs-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 14px;
+    margin-bottom: 8px;
+}
+
 .sidebar-tabs {
     display: flex;
     padding: 0 14px;
     gap: 6px;
-    margin-bottom: 8px;
     position: relative;
     z-index: 1;
+}
+
+.create-group-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.create-group-btn:hover {
+    background: var(--bambo-green);
+    color: white;
 }
 
 .sidebar-tab {

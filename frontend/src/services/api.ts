@@ -88,6 +88,11 @@ export const conversationAPI = {
         api.get<Message[]>(`/conversations/${conversationId}/messages`, {
             params: { cursor, limit },
         }),
+
+    addParticipants: (conversationId: string, participantIds: string[]) =>
+        api.post<{ success: boolean; addedCount: number }>(`/conversations/${conversationId}/participants`, {
+            participantIds,
+        }),
 };
 
 export default api;
