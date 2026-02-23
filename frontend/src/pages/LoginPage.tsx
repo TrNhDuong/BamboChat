@@ -30,8 +30,44 @@ const LoginPage = () => {
         }
     };
 
+    const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        const { currentTarget, clientX, clientY } = e;
+        const { left, top, width, height } = currentTarget.getBoundingClientRect();
+        const xPercent = ((clientX - left) / width) * 100;
+        const yPercent = ((clientY - top) / height) * 100;
+
+        (currentTarget as HTMLElement).style.setProperty('--mouse-x', `${xPercent}%`);
+        (currentTarget as HTMLElement).style.setProperty('--mouse-y', `${yPercent}%`);
+
+        // Create a new ripple (throttle with timestamp)
+        if (Date.now() % 3 === 0) { // Simple logic to not spawn too many
+            const newRipple = { id: Date.now(), x: clientX - left, y: clientY - top };
+            setRipples((prev) => [...prev.slice(-15), newRipple]);
+            setTimeout(() => {
+                setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+            }, 1200);
+        }
+    };
+
     return (
-        <div className="auth-page">
+        <div className="auth-page" onMouseMove={handleMouseMove}>
+            {/* Background elements */}
+            <div className="wave-layer" />
+            <div className="wave-layer secondary" />
+
+            {/* Interactive Ripples */}
+            {ripples.map((r) => (
+                <div key={r.id} className="ripple" style={{ left: r.x, top: r.y }} />
+            ))}
+
+            {/* Random water drops */}
+            <div className="water-drop" style={{ width: 80, height: 90, top: '15%', left: '10%', animationDelay: '0s' }} />
+            <div className="water-drop" style={{ width: 60, height: 70, top: '65%', left: '85%', animationDelay: '-2s' }} />
+            <div className="water-drop" style={{ width: 100, height: 110, top: '80%', left: '15%', animationDelay: '-4s' }} />
+            <div className="water-drop" style={{ width: 50, height: 60, top: '10%', left: '80%', animationDelay: '-6s' }} />
+
             <div className="auth-card">
                 <div className="auth-brand">
                     <div className="auth-brand-icon">

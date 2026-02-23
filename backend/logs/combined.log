@@ -1637,3 +1637,6 @@ Error: listen EADDRINUSE: address already in use :::5000
 2026-02-23 21:02:45 [info]: ::1 - - [23/Feb/2026:14:02:45 +0000] "GET /api/conversations/699c1753192ea3694ee22113/messages?limit=20 HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" {"metadata":{}}
 2026-02-23 21:02:46 [info]: ::1 - - [23/Feb/2026:14:02:46 +0000] "GET /api/conversations/699bc449915e5bdb209b95a6/messages?limit=20 HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" {"metadata":{}}
 2026-02-23 21:02:46 [info]: ::1 - - [23/Feb/2026:14:02:46 +0000] "GET /api/conversations/699c1753192ea3694ee22113/messages?limit=20 HTTP/1.1" 304 - "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" {"metadata":{}}
+2026-02-23 21:13:20 [info]: Server running on port 5000 {"metadata":{}}
+2026-02-23 21:13:20 [info]: REST API: http://localhost:5000/api {"metadata":{}}
+2026-02-23 21:13:20 [info]: WebSocket: ws://localhost:5000 {"metadata":{}}
