@@ -1,93 +1,93 @@
 # Database Schema: BamboChat System (MongoDB/Mongoose)
 
-Tài liệu này mô tả cấu trúc cơ sở dữ liệu NoSQL được triển khai qua Mongoose cho hệ thống Web Chat. Thiết kế tận dụng các tính năng của MongoDB như TTL indexes và Sparse indexes để tối ưu hiệu suất.
+This document describes the NoSQL database structure implemented via Mongoose for the BamboChat messaging system. The design leverages MongoDB features such as TTL indexes and Sparse indexes for optimal performance.
 
 ---
 
-## 1. Người dùng & Xác thực (Collections: Users & OTPs)
+## 1. Users & Authentication (Collections: Users & OTPs)
 
 ### Collection `Users`
-Lưu trữ thông tin định danh. Sử dụng `id` tùy chọn của người dùng làm khóa chính `_id` (String).
+Stores primary identitiy and profile data. The custom `_id` is the user's chosen unique ID (String).
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `_id` | String (**PK**) | ID người dùng tự chọn (Unique, max 50 chars) |
-| `email` | String | Email dùng cho OTP/OAuth (Unique, Index) |
-| `passwordHash` | String | Mật khẩu đã băm (Bcrypt) |
-| `isVerified` | Boolean | Trạng thái xác thực (Default: false) |
-| `displayName` | String | Display name on the UI |
-| `bio` | String | Short self-introduction |
-| `avatar` | Object | `{ url, public_id }` for profile picture |
-| `googleId` | String | ID from Google OAuth (Unique, Sparse Index) |
+| `_id` | String (**PK**) | Unique username/ID (Max 50 chars) |
+| `email` | String | Email for OTP/OAuth (Unique, Indexed) |
+| `passwordHash` | String | Bcrypt hashed password |
+| `isVerified` | Boolean | Verification status (Default: false) |
+| `displayName` | String | Name displayed on the UI |
+| `bio` | String | Short user bio/introduction |
+| `avatar` | Object | `{ url, public_id }` for Cloudinary storage |
+| `googleId` | String | Google OAuth ID (Unique, Sparse Indexed) |
 
-* **Indexes:** `unique: true` trên `email`, `sparse: true` trên `googleId`.
+* **Indexes:** `unique: true` on `email`, `sparse: true` on `googleId`.
 
 ### Collection `OTPs`
-Quản lý mã xác thực ngắn hạn. Tự động xóa sau khi hết hạn bằng TTL Index.
+Manages short-term verification codes. Automatically expires via TTL Index.
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `email` | String | Email nhận mã (Index) |
-| `otpCode` | String | Mã 6 chữ số |
-| `expiresAt` | Date | Thời điểm hết hạn |
-| `attempts` | Number | Số lần nhập sai (Default: 0) |
+| `email` | String | Recipient email (Indexed) |
+| `otpCode` | String | 6-digit verification code |
+| `expiresAt` | Date | Expiration timestamp |
+| `attempts` | Number | Failed attempt counter (Default: 0) |
 
-* **Indexes:** `idx_otps_email`, TTL index trên `expiresAt`.
+* **Indexes:** `idx_otps_email`, TTL index on `expiresAt`.
 
 ---
 
-## 2. Quan hệ & Bạn bè (Collection: Friendships)
+## 2. Relationships (Collection: Friendships)
 
-Lưu trữ đồ thị quan hệ giữa người dùng.
+Stores the social graph between users.
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `requesterId` | String (**FK**) | Người gửi yêu cầu kết bạn |
-| `addresseeId` | String (**FK**) | Người nhận yêu cầu (Index) |
+| `requesterId` | String (**FK**) | User who sent the request |
+| `addresseeId` | String (**FK**) | Recipient of the request (Indexed) |
 | `status` | Enum | `pending`, `accepted`, `blocked` |
 
-* **Indexes:** Composite Unique `{ requesterId, addresseeId }` để tránh lời mời trùng lặp.
+* **Indexes:** Composite Unique `{ requesterId, addresseeId }` to prevent duplicate requests.
 
 ---
 
-## 3. Hội thoại & Tin nhắn (Collections: Conversations, Participants, Messages)
+## 3. Messaging (Collections: Conversations, Participants, Messages)
 
 ### Collection `Conversations`
-Đại diện cho các phòng chat.
+Represents chat rooms/sessions.
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
 | `type` | Enum | `direct_message`, `group` |
-| `name` | String | Tên nhóm (NULL nếu là chat 1-1) |
+| `name` | String | Group name (Null for direct messages) |
 
 ### Collection `Participants`
-Liên kết người dùng vào hội thoại. Quản lý trạng thái "Đã xem".
+Links users to conversations and tracks read status/roles.
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `conversationId`| ObjectId(**FK**) | ID phòng chat |
-| `userId` | String (**FK**) | ID người dùng (Index) |
-| `lastReadMessageId`| String | ID of the last message read |
-| `role` | Enum | `admin`, `member` (Controls kick permissions) |
+| `conversationId`| ObjectId(**FK**) | ID of the conversation |
+| `userId` | String (**FK**) | ID of the user (Indexed) |
+| `lastReadMessageId`| String | ID of the last message read by the user |
+| `role` | Enum | `admin`, `member` (Controls kick/manage permissions) |
 
 * **Indexes:** Composite Unique `{ conversationId, userId }`.
 
 ### Collection `Messages`
-Lưu trữ nội dung tin nhắn. Sử dụng UUIDv7 để sắp xếp theo thời gian tự nhiên.
+Stores message content. Uses UUIDv7 for natural time-based sorting.
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `_id` | String (**PK**) | Khóa chính (UUIDv7 - Time sortable) |
-| `conversationId`| ObjectId(**FK**) | Thuộc phòng chat nào (Index) |
-| `senderId` | String (**FK**) | Người gửi tin nhắn |
-| `content` | String | Nội dung văn bản |
+| `_id` | String (**PK**) | Primary Key (UUIDv7 - Time sortable) |
+| `conversationId`| ObjectId(**FK**) | Parent conversation (Indexed) |
+| `senderId` | String (**FK**) | Message sender |
+| `content` | String | Text content |
 
-* **Indexes:** Compound index `{ conversationId: 1, _id: -1 }` cho Pagination.
+* **Indexes:** Compound index `{ conversationId: 1, _id: -1 }` for optimized pagination.
 
 ---
 
-## 4. Đặc điểm Kỹ thuật
+## 4. Technical Highlights
 
-1.  **UUIDv7 & Pagination:** Bảng `Messages` sử dụng UUIDv7 thay vì ObjectId mặc định để đảm bảo các tin nhắn luôn được sắp xếp theo thời gian gửi ngay cả khi phân tán, hỗ trợ **Cursor-based Pagination** mượt mà.
-2.  **Watermark Read Receipts:** Trạng thái "Đã xem" không lưu theo từng tin nhắn mà lưu con trỏ `lastReadMessageId` trong `Participants`.
-3.  **Custom _id:** Việc sử dụng String `_id` cho `Users` giúp việc tìm kiếm bằng tên người dùng (id) trở nên trực tiếp và nhanh chóng hơn.
+1.  **UUIDv7 & Pagination:** The `Messages` collection uses UUIDv7 instead of the default ObjectId. This ensures messages are sortable by generation time across distributed systems, enabling smooth **Cursor-based Pagination**.
+2.  **Watermark Read Receipts:** Read status is not stored per message. Instead, the `lastReadMessageId` pointer in the `Participants` collection acts as a "watermark."
+3.  **Custom _id:** Using a custom String `_id` for `Users` allows for direct and rapid lookups based on the unique username chosen by the user.

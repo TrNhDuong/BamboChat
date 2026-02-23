@@ -1,43 +1,43 @@
-# Luồng Xác thực (Authentication Flow)
+# Authentication Flow (JWT & OAuth2)
 
-BamboChat hỗ trợ hai phương thức xác thực chính: Đăng nhập truyền thống (ID/Password + OTP) và Đăng nhập qua bên thứ ba (Google OAuth2).
+BamboChat supports two primary authentication methods: Traditional Credentials (ID/Password + OTP) and Third-party Authentication (Google OAuth2).
 
 ---
 
-## 1. Xác thực truyền thống (ID/Password)
+## 1. Traditional Authentication (ID/Password)
 
-Hệ thống sử dụng cơ chế xác thực từng bước để đảm bảo tính an toàn:
+The system uses a step-by-step verification process to ensure account security:
 
-1.  **Đăng ký (Register)**:
-    *   User nhập ID, Email, Password.
-    *   Backend lưu User với trạng thái `isVerified = false`.
-    *   Backend sinh mã OTP 6 số và gửi qua Email (sử dụng Brevo).
-2.  **Xác thực mã (Verify OTP)**:
-    *   User nhập mã OTP nhận được từ Email.
-    *   Backend kiểm tra mã và cập nhật `isVerified = true`.
-3.  **Đăng nhập (Login)**:
-    *   User sử dụng ID và Password.
-    *   Hệ thống trả về **Access Token** (ngắn hạn) và **Refresh Token** (dài hạn).
-    *   Access Token được đính kèm vào Header `Authorization: Bearer <token>` cho mọi request sau đó.
+1.  **Registration**:
+    *   User provides ID, Email, and Password.
+    *   The Backend persists the User with `isVerified = false`.
+    *   A 6-digit OTP is generated and sent via Email using the Brevo SMTP service.
+2.  **OTP Verification**:
+    *   The User inputs the OTP received.
+    *   The Backend validates the code and updates the user status to `isVerified = true`.
+3.  **Login**:
+    *   User logs in with ID and Password.
+    *   The system issues an **Access Token** (short-term) and a **Refresh Token** (long-term).
+    *   The Access Token must be included in the `Authorization: Bearer <token>` header for all authenticated requests.
 
 ---
 
 ## 2. Google OAuth2
 
-Tích hợp thông qua thư viện `passport-google-oauth20`:
+Integrated using the `passport-google-oauth20` library:
 
-*   **Khởi tạo**: Frontend gọi `GET /api/auth/google`.
-*   **Redirect**: Backend chuyển hướng User tới trang đăng nhập của Google.
-*   **Callback**: Sau khi thành công, Google gọi về `/api/auth/google/callback`.
-*   **Xử lý tại Backend**:
-    *   Nếu User đã tồn tại (khớp Email hoặc Google ID): Đăng nhập ngay.
-    *   Nếu User chưa tồn tại: Tự động tạo tài khoản mới với mật khẩu mặc định.
-*   **Trả kết quả**: Backend redirect User về Frontend kèm theo các Token trên thanh URL. Frontend sẽ lưu Token vào `localStorage` và chuyển vào trang Chat.
+*   **Initialization**: The Frontend triggers `GET /api/auth/google`.
+*   **Redirection**: The Backend redirects the user to the official Google login page.
+*   **Callback**: Upon successful login, Google redirects back to `/api/auth/google/callback`.
+*   **Backend Logic**:
+    *   **Existing User**: If the email or Google ID matches, the user is logged in immediately.
+    *   **New User**: A new account is automatically provisioned with default settings.
+*   **Result Delivery**: The Backend redirects the user back to the Frontend with tokens embedded in the URL parameters. The Frontend parses these, persists them in `localStorage`, and navigates to the Chat interface.
 
 ---
 
-## 3. Bảo mật Token
+## 3. Token Security & Management
 
-*   **Access Token**: Hết hạn sau 15 phút. Lưu trong bộ nhớ hoặc `localStorage`.
-*   **Refresh Token**: Hết hạn sau 7 ngày. Dùng để lấy Access Token mới mà không cần đăng nhập lại.
-*   **Socket Authentication**: Khi kết nối WebSocket, Token cũng được gửi kèm trong phần `auth` của Socket.io client để xác định danh tính User.
+*   **Access Token**: Expires after 15 minutes. Best stored in memory or short-term `localStorage`.
+*   **Refresh Token**: Expires after 7 days. Used to obtain a new Access Token without requiring the user to re-authenticate manually.
+*   **Socket Authentication**: During the WebSocket handshake, the Access Token is passed in the `auth` object of the Socket.io client to verify identity before allowing real-time communication.

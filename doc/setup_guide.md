@@ -1,29 +1,30 @@
-# Hướng dẫn Cài đặt & Chạy dự án (Setup Guide)
+# Setup & Running the Project (Setup Guide)
 
-Tài liệu này hướng dẫn bạn cách thiết lập môi trường và chạy dự án BamboChat trên máy cục bộ (Local).
-
----
-
-## 1. Yêu cầu Hệ thống (Prerequisites)
-
-*   **Node.js**: Phiên bản 16.x trở lên.
-*   **MongoDB**: Có sẵn một Cluster trên MongoDB Atlas hoặc chạy MongoDB cục bộ.
-*   **npm**: Thường đi kèm với Node.js.
+This guide will help you set up the environment and run the BamboChat project on your local machine.
 
 ---
 
-## 2. Thiết lập Backend
+## 1. Prerequisites
 
-1.  **Di chuyển vào thư mục backend**:
+*   **Node.js**: Version 16.x or higher.
+*   **MongoDB**: A MongoDB Atlas Cluster or a local MongoDB instance.
+*   **npm**: Usually bundled with Node.js.
+*   **Cloudinary Account**: Required for avatar/image storage.
+
+---
+
+## 2. Backend Setup
+
+1.  **Navigate to the backend directory**:
     ```bash
     cd backend
     ```
-2.  **Cài đặt dependencies**:
+2.  **Install dependencies**:
     ```bash
     npm install
     ```
-3.  **Cấu hình biến môi trường (.env)**:
-    Tạo hoặc chỉnh sửa file `.env` trong thư mục `backend/` với các giá trị sau:
+3.  **Environment Variables (.env)**:
+    Create a `.env` file in the `backend/` root with the following variables:
     ```env
     PORT=5000
     MONGODB_URI="your_mongodb_connection_string"
@@ -32,10 +33,11 @@ Tài liệu này hướng dẫn bạn cách thiết lập môi trường và ch�
     JWT_EXPIRES_IN=15m
     JWT_REFRESH_EXPIRES_IN=7d
 
-    # Gửi Email qua Brevo (để dùng OTP)
+    # Email Service (Brevo) for OTP
     BREVO_API_KEY="your_brevo_api_key"
     BREVO_URL="https://api.brevo.com/v3/smtp/email"
 
+    # Google OAuth (for Google Login)
     GOOGLE_CLIENT_ID="your_google_client_id"
     GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
@@ -44,33 +46,34 @@ Tài liệu này hướng dẫn bạn cách thiết lập môi trường và ch�
     CLOUDINARY_API_KEY="your_api_key"
     CLOUDINARY_API_SECRET="your_api_secret"
     ```
-4.  **Chạy Backend**:
-    *   Chế độ phát triển (Auto-reload): `npm run dev`
-    *   Chế độ chính thức: `npm start`
+4.  **Run the Backend**:
+    *   Development mode (Auto-reload): `npm run dev`
+    *   Production mode: `npm start`
 
 ---
 
-## 3. Thiết lập Frontend
+## 3. Frontend Setup
 
-1.  **Di chuyển vào thư mục frontend**:
+1.  **Navigate to the frontend directory**:
     ```bash
     cd frontend
     ```
-2.  **Cài đặt dependencies**:
+2.  **Install dependencies**:
     ```bash
     npm install
     ```
-3.  **Cấu hình**:
-    Hiện tại Frontend đang kết nối mặc định tới `http://localhost:5000/api`. Nếu bạn đổi cổng backend, hãy cập nhật trong `src/services/api.ts` và `src/services/socket.ts`.
-4.  **Chạy Frontend**:
+3.  **Configuration**:
+    The Frontend connects to `http://localhost:5000/api` by default. If your backend uses a different port, update the URLs in `src/services/api.ts` and `src/services/socket.ts`.
+4.  **Run the Frontend**:
     ```bash
     npm run dev
     ```
-    Mặc định ứng dụng sẽ chạy tại: `http://localhost:5173`
+    The application will be available at: `http://localhost:5173`
 
 ---
 
-## 4. Các lưu ý quan trọng
+## 4. Important Notes
 
-*   **Google OAuth**: Khi tạo Credentials trên Google Cloud, hãy đảm bảo đã thêm `http://localhost:5000/api/auth/google/callback` vào danh sách **Authorized redirect URIs**.
-*   **Cơ sở dữ liệu**: Đảm bảo Network Access trên MongoDB Atlas đã cho phép địa chỉ IP của bạn.
+*   **Google OAuth**: When creating credentials in the Google Cloud Console, ensure you add `http://localhost:5000/api/auth/google/callback` to the **Authorized redirect URIs** list.
+*   **Cloudinary Presets**: Ensure your Cloudinary account is active and the API keys are correctly entered in the `.env` file.
+*   **Database Access**: Ensure your MongoDB Atlas Network Access whitelist includes your current IP address.

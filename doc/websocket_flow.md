@@ -1,21 +1,21 @@
-# Luồng WebSocket (WebSocket Flow)
+# WebSocket Flow & Real-time Communication
 
-BamboChat sử dụng **Socket.io** để xử lý giao tiếp thời gian thực giữa người dùng. Dưới đây là mô tả chi tiết cách hệ thống hoạt động.
-
----
-
-## 1. Kết nối (Connection)
-
-Khi User đăng nhập thành công vào Frontend:
-1.  Frontend gọi hàm `connectSocket(token)`.
-2.  Token được gửi kèm trong object `auth`.
-3.  Server kiểm tra Token:
-    *   Nếu hợp lệ: Chấp nhận kết nối và lưu `socket.id` tương ứng với `user_id`.
-    *   Nếu không hợp lệ: Từ chối kết nối.
+BamboChat uses **Socket.io** to manage real-time communication between users. This document explains the underlying logic and event structure.
 
 ---
 
-## 2. Luồng Gửi & Nhận tin nhắn
+## 1. Connection Lifecycle
+
+When a user successfully logs into the Frontend:
+1.  The client calls `connectSocket(token)`.
+2.  The JWT token is passed via the `auth` object during the handshake.
+3.  The Server validates the token:
+    *   **Valid**: Connection accepted; `socket.id` is mapped to the `user_id`.
+    *   **Invalid**: Connection refused.
+
+---
+
+## 2. Messaging Sequence
 
 ```mermaid
 sequenceDiagram
@@ -25,30 +25,31 @@ sequenceDiagram
     participant B as User B (Frontend)
 
     A->>S: emit("send_message", { conversationId, content })
-    S->>S: Xác thực User & Quyền trong phòng
-    S->>DB: Lưu tin nhắn mới vào bảng "messages"
-    DB-->>S: Trả về Message Object (kèm ID và CreatedAt)
+    S->>S: Authenticate User & Validate Room Permissions
+    S->>DB: Persist new message in "messages" collection
+    DB-->>S: Return Message Object (with UUIDv7 ID and CreatedAt)
     S-->>A: emit("message_sent_confirm", { ... })
     S->>B: emit("receive_message", messageData)
 ```
 
 ---
 
-## 3. Các sự kiện chính (Main Events)
+## 3. Main Events
 
-### Client gửi (Emits)
-*   `send_message`: Gửi nội dung tin nhắn mới.
-*   `typing`: Thông báo cho người khác biết mình đang nhập văn bản.
-*   `join_conversation`: Tham gia vào một "Room" cụ thể để nhận thông báo riêng của phòng đó.
+### Client Emits (Input)
+*   **`send_message`**: Dispatches new text content.
+*   **`typing`**: Notifies others in the chat that the user is currently composing a message.
+*   **`join_conversation`**: Enters a specific "Room" to receive targeted room broadcasts.
 
-### Client nghe (Listens)
-*   `receive_message`: Nhận tin nhắn mới từ người khác trong thời gian thực.
-*   `user_online_status`: Nhận thông báo khi bạn bè online/offline.
-*   `friend_request`: Nhận thông báo có lời mời kết bạn mới.
+### Client Listens (Output)
+*   **`receive_message`**: Receives fresh messages from other participants in real-time.
+*   **`user_online_status`**: Real-time updates when friends come online or go offline.
+*   **`friend_request`**: Notification triggered when a new friend request is received.
 
 ---
 
-## 4. Tối ưu hóa
+## 4. Implementation Details
 
-*   **Rooms**: Each conversation (`conversation_id`) is a private Room. The server broadcasts messages only to sockets currently in that room. This applies to both **1-on-1** and **Group chats**.
-*   **Offline Handling**: Nếu User không online, Server vẫn lưu tin nhắn vào DB. Khi User online trở lại, Frontend sẽ gọi API `/messages` để lấy lịch sử tin nhắn chưa đọc.
+*   **Rooms Architecture**: Each conversation (`conversation_id`) is treated as a unique Socket.io Room. The server broadcasts messages exclusively to sockets joined to that specific room. This handles both **1-on-1 Direct Messages** and **Multi-user Group Chats**.
+*   **Offline Handling**: If a user is offline, the message is still persisted in the database. When the user reconnects, the Frontend fetches missed history via the `/messages` REST API endpoint.
+*   **State Management**: Real-time status (`user_online_status`) is maintained by tracking active socket heartbeats on the server.

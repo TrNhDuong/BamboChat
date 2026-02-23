@@ -77,6 +77,7 @@ For deeper technical insights, please refer to the documents in the `doc/` direc
 3.  [**Database Design**](doc/database_design.md): Schema structures and data relationships.
 4.  [**Authentication Flow**](doc/authentication.md): Details on JWT, OTP, and Google Login.
 5.  [**WebSocket Flow**](doc/websocket_flow.md): How real-time messaging and status updates work.
+6.  [**UI Design System**](doc/ui_design.md): Design principles, colors, and layout aesthetics.
 
 ---
 

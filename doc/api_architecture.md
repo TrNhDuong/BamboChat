@@ -1,78 +1,79 @@
-# Kiến trúc Phần mềm & API: BamboChat System
+# API Architecture & Software Design: BamboChat System
 
-Tài liệu này định nghĩa kiến trúc tổng thể, cấu trúc thư mục và danh sách các API/Sự kiện WebSocket cho dự án BamboChat. Hệ thống áp dụng mô hình phân lớp **Controller - Service - Repository** để đảm bảo tính module hóa và dễ bảo trì.
-
----
-
-## 1. Mô hình Kiến trúc (Architecture Pattern)
-
-Hệ thống được chia thành 4 lớp cốt lõi:
-
-1.  **Routing / Gateway:** Sử dụng `express.Router` để định nghĩa các endpoint và áp dụng `authMiddleware` (JWT) để bảo vệ các tài nguyên riêng tư.
-2.  **Controller Layer:** Xử lý các HTTP Request/Response, validate dữ liệu đầu vào cơ bản và gọi xuống Service Layer.
-3.  **Service Layer (Business Logic):** Chứa các logic nghiệp vụ phức tạp (ví dụ: xử lý gửi lời mời kết bạn, kiểm tra phòng chat tồn tại).
-4.  **Repository Layer:** Tương tác trực tiếp với MongoDB thông qua Mongoose Models.
+This document defines the overall architecture, directory structure, and the list of RESTful APIs and WebSocket events for the BamboChat project. The system follows the **Controller - Service - Repository** layered model to ensure modularity and maintainability.
 
 ---
 
-## 2. Danh sách RESTful API
+## 1. Architectural Model
 
-Tất cả các API (ngoại trừ Auth) đều yêu cầu Header: `Authorization: Bearer <token>`.
+The system is divided into 4 core layers:
 
-### A. Xác thực (Authentication) - `/api/auth`
+1.  **Routing / Gateway:** Uses `express.Router` to define endpoints and applies `authMiddleware` (JWT) to protect private resources.
+2.  **Controller Layer:** Handles HTTP Request/Response, performs basic input validation, and delegates work to the Service Layer.
+3.  **Service Layer (Business Logic):** Contains complex business logic (e.g., handling friend requests, validating chat room existence, processing avatar uploads).
+4.  **Repository Layer:** Interacts directly with MongoDB via Mongoose Models for data persistence and retrieval.
 
-| Method | Endpoint | Nhiệm vụ | Ghi chú |
+---
+
+## 2. RESTful API Reference
+
+All APIs (except Authentication) require the Header: `Authorization: Bearer <token>`.
+
+### A. Authentication - `/api/auth`
+
+| Method | Endpoint | Purpose | Notes |
 | :--- | :--- | :--- | :--- |
-| POST | `/register` | Đăng ký tài khoản | Chờ xác thực OTP qua email. |
-| POST | `/verify-otp` | Xác thực OTP | Cần mã OTP 6 số và email. |
-| POST | `/login` | Đăng nhập | Trả về Access Token & Refresh Token. |
-| GET | `/google` | Login Google | Chuyển hướng tới Google Login. |
-| GET | `/google/callback`| Xử lý Google Callback | Trả về token qua URL params. |
+| POST | `/register` | User registration | Triggers OTP email verification. |
+| POST | `/verify-otp` | Verify email OTP | Requires 6-digit OTP and email. |
+| POST | `/login` | Basic authentication | Returns Access Token & Refresh Token. |
+| GET | `/google` | Google OAuth Login | Redirects to Google login page. |
+| GET | `/google/callback`| OAuth callback | Returns tokens via URL parameters. |
 
-### B. Người dùng (Users) - `/api/users`
+### B. Users - `/api/users`
 
-| Method | Endpoint | Nhiệm vụ | Ghi chú |
+| Method | Endpoint | Purpose | Notes |
 | :--- | :--- | :--- | :--- |
-| GET | `/search` | Search for users | By `id` (query param). |
-| PUT | `/profile` | Update profile | Change `displayName`, `bio`. |
-| POST | `/avatar` | Upload avatar | Multer-based image upload. |
+| GET | `/search` | Search users | By `id` (query param). |
+| PUT | `/profile` | Update profile | Change `displayName` and `bio`. |
+| POST | `/avatar` | Upload avatar | Multer-based image upload to Cloudinary. |
 
-### C. Bạn bè (Friends) - `/api/friends`
+### C. Friends - `/api/friends`
 
-| Method | Endpoint | Nhiệm vụ | Ghi chú |
+| Method | Endpoint | Purpose | Notes |
 | :--- | :--- | :--- | :--- |
-| GET | `/` | Lấy danh sách bạn bè | Trả về mảng `userId`. |
-| GET | `/requests/pending`| Lời mời đã nhận | Các yêu cầu đang chờ xử lý. |
-| GET | `/requests/sent` | Lời mời đã gửi | Các yêu cầu bạn đã gửi đi. |
-| POST | `/requests` | Gửi lời mời kết bạn | Cần truyền `addresseeId`. |
-| PUT | `/requests/:id` | Chấp nhận/Từ chối | `action: 'accept' / 'reject'`. |
-| DELETE | `/:id` | Hủy kết bạn | Xóa quan hệ bạn bè. |
+| GET | `/` | List friends | Returns an array of friend user IDs. |
+| GET | `/requests/pending`| Received requests | Friend requests awaiting your action. |
+| GET | `/requests/sent` | Sent requests | Friend requests you have sent out. |
+| POST | `/requests` | Send friend request | Requires `addresseeId`. |
+| PUT | `/requests/:id` | Accept/Reject | `action: 'accept' / 'reject'`. |
+| DELETE | `/:id` | Unfriend | Removes the friendship bond. |
 
-### D. Hội thoại (Conversations) - `/api/conversations`
+### D. Conversations - `/api/conversations`
 
-| Method | Endpoint | Nhiệm vụ | Ghi chú |
+| Method | Endpoint | Purpose | Notes |
 | :--- | :--- | :--- | :--- |
-| POST | `/` | Create/Get conversation | For 1-1 and Group chats. |
-| GET | `/` | Get conversation list | Lists rooms with the last message. |
-| GET | `/:id/messages` | Get message history | Supports pagination via `cursor`. |
+| POST | `/` | Create/Get chat | Used for both 1-on-1 and Group chats. |
+| GET | `/` | List conversations | Rooms with the latest message snippet. |
+| GET | `/:id/messages` | Get history | Supports cursor-based pagination. |
 | POST | `/:id/participants` | Add members | Add multiple users to a group. |
-| DELETE | `/:id/participants/:userId` | Kick participant | Admin-only removal of member. |
+| DELETE | `/:id/participants/:userId` | Kick participant | Admin-only member removal. |
 
 ---
 
 ## 3. WebSocket Events (Socket.io)
 
-### Client Emit (Gửi lên)
+### Client Emit (Input)
 *   **`send_message`**: `{ conversationId, content }`
 *   **`join_conversation`**: `{ conversationId }`
 *   **`typing`**: `{ conversationId, isTyping }`
 
-### Client Listen (Nhận về)
+### Client Listen (Output)
 *   **`receive_message`**: `{ _id, conversationId, senderId, content, createdAt }`
-*   **`connect_error` / `disconnect`**: Quản lý trạng thái kết nối.
+*   **`user_online_status`**: Real-time status updates for friends.
+*   **`friend_request`**: Notification for new incoming requests.
 
 ---
 
-## 4. Middleware & Xử lý lỗi
-*   **`authMiddleware`**: Kiểm tra tính hợp lệ của JWT trong Header. Nếu hết hạn hoặc sai, trả về lỗi 401.
-*   **`errorHandler`**: Middleware tập trung xử lý mọi lỗi phát sinh trong quá trình chạy, trả về JSON chuẩn `{ message, status }`.
+## 4. Middleware & Error Handling
+*   **`authMiddleware`**: Validates the JWT in the Header. Returns 401 if invalid/expired.
+*   **`errorHandler`**: Centralized middleware that catches all errors and returns a standardized JSON object `{ message, status }`.
