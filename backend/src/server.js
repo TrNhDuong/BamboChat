@@ -9,6 +9,8 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
 const initializeSocket = require('./sockets/socketHandler');
 const passport = require('./config/passport');
+const logger = require('./utils/logger');
+const morgan = require('morgan');
 
 // Route imports
 const authRoutes = require('./routes/auth.routes');
@@ -35,6 +37,7 @@ const io = new Server(server, {
 // ─────────────────────────────────────────────
 // Middleware
 // ─────────────────────────────────────────────
+app.use(morgan('combined', { stream: logger.stream }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -72,9 +75,9 @@ const startServer = async () => {
     await connectDB();
 
     server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`REST API: http://localhost:${PORT}/api`);
-        console.log(`WebSocket: ws://localhost:${PORT}`);
+        logger.info(`Server running on port ${PORT}`);
+        logger.info(`REST API: http://localhost:${PORT}/api`);
+        logger.info(`WebSocket: ws://localhost:${PORT}`);
     });
 };
 

@@ -79,12 +79,20 @@ const ChatWindow = ({
             }
         };
 
+        const handleReactionUpdate = ({ messageId, reactions }: any) => {
+            setMessages((prev) =>
+                prev.map((m) => (m._id === messageId ? { ...m, reactions } : m))
+            );
+        };
+
         socket.on('receive_message', handleNewMessage);
         socket.on('typing', handleTyping);
+        socket.on('reaction_update', handleReactionUpdate);
 
         return () => {
             socket.off('receive_message', handleNewMessage);
             socket.off('typing', handleTyping);
+            socket.off('reaction_update', handleReactionUpdate);
         };
     }, [conversationId, userId]);
 

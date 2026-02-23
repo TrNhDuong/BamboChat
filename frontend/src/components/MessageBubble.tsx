@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import type { Message } from '../types';
+import { getSocket } from '../services/socket';
+import { SmileyIcon } from './Icons';
 import './MessageBubble.css';
 
 interface MessageBubbleProps {
@@ -8,16 +11,41 @@ interface MessageBubbleProps {
     senderName?: string;
 }
 
+const REACTION_TYPES = [
+    { type: 'like', emoji: '👍' },
+    { type: 'love', emoji: '❤️' },
+    { type: 'haha', emoji: '😂' },
+    { type: 'sad', emoji: '😢' },
+    { type: 'angry', emoji: '😡' },
+];
+
 const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbleProps) => {
+    const [showPicker, setShowPicker] = useState(false);
+
     const formatTime = (dateStr: string) => {
         const date = new Date(dateStr);
         return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     };
 
+    const handleReaction = (reactionType: string) => {
+        const socket = getSocket();
+        if (!socket) return;
+        socket.emit('send_reaction', { messageId: message._id, reactionType });
+        setShowPicker(false);
+    };
+
     const avatarLetter = (senderName || message.senderId).charAt(0).toUpperCase();
 
+    // Group reactions by type
+    const reactionGroups = (message.reactions || []).reduce((acc: Record<string, number>, r) => {
+        acc[r.type] = (acc[r.type] || 0) + 1;
+        return acc;
+    }, {});
+
     return (
-        <div className={`message-bubble-wrapper ${isSent ? 'sent' : 'received'} ${showAvatar ? 'has-avatar' : ''}`}>
+        <div
+            className={`message-bubble-wrapper ${isSent ? 'sent' : 'received'} ${showAvatar ? 'has-avatar' : ''}`}
+        >
             {!isSent && (
                 <div className="message-avatar-container">
                     {showAvatar ? (
@@ -30,9 +58,44 @@ const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbl
                 </div>
             )}
 
-            <div className="message-bubble">
-                <div>{message.content}</div>
-                <div className="message-time">{formatTime(message.createdAt)}</div>
+            <div className="message-content-container">
+                <div className="message-action-overlay">
+                    <button
+                        className={`reaction-trigger-btn ${showPicker ? 'active' : ''}`}
+                        onClick={() => setShowPicker(!showPicker)}
+                    >
+                        <SmileyIcon size={14} />
+                    </button>
+                    {showPicker && (
+                        <div className="reaction-picker">
+                            {REACTION_TYPES.map((r) => (
+                                <button
+                                    key={r.type}
+                                    className="reaction-option"
+                                    onClick={() => handleReaction(r.type)}
+                                    title={r.type}
+                                >
+                                    {r.emoji}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <div className="message-bubble">
+                    <div>{message.content}</div>
+                    <div className="message-time">{formatTime(message.createdAt)}</div>
+
+                    {Object.keys(reactionGroups).length > 0 && (
+                        <div className="message-reactions">
+                            {Object.entries(reactionGroups).map(([type, count]) => (
+                                <span key={type} className="reaction-badge" title={type}>
+                                    {REACTION_TYPES.find(r => r.type === type)?.emoji}
+                                    {count > 1 && <span className="reaction-count">{count}</span>}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -36,6 +36,7 @@ export interface Message {
     conversationId: string;
     senderId: string;
     content: string;
+    reactions?: { userId: string; type: string }[];
     createdAt: string;
 }
 

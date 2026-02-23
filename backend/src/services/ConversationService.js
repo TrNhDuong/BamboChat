@@ -1,5 +1,6 @@
 const conversationRepository = require('../repositories/ConversationRepository');
 const participantRepository = require('../repositories/ParticipantRepository');
+const logger = require('../utils/logger');
 
 class ConversationService {
     /**
@@ -27,6 +28,7 @@ class ConversationService {
             await participantRepository.create({ conversationId: conversation._id, userId, role: 'admin' });
             await participantRepository.create({ conversationId: conversation._id, userId: otherUserId });
 
+            logger.info(`Direct message conversation created: ${conversation._id}`, { userId, otherUserId });
             return { conversation, isExisting: false };
         }
 
@@ -48,6 +50,7 @@ class ConversationService {
                 }
             }
 
+            logger.info(`Group conversation created: ${conversation._id}`, { creatorId: userId, participantCount: participantIds.length + 1 });
             return { conversation, isExisting: false };
         }
 

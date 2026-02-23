@@ -19,6 +19,12 @@ const messageSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Message content is required'],
         },
+        reactions: [
+            {
+                userId: { type: String, ref: 'User' },
+                type: { type: String, enum: ['like', 'love', 'haha', 'sad', 'angry'] },
+            },
+        ],
     },
     {
         timestamps: true,
@@ -28,6 +34,9 @@ const messageSchema = new mongoose.Schema(
 
 // Compound index for cursor-based pagination: get messages by conversation, newest first
 messageSchema.index({ conversationId: 1, _id: -1 });
+
+// Index for finding reactions by user
+messageSchema.index({ 'reactions.userId': 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 

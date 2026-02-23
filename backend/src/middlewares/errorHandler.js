@@ -1,9 +1,11 @@
+const logger = require('../utils/logger');
+
 /**
  * Global Error Handler Middleware.
  * Catches all errors and returns a consistent JSON response.
  */
 const errorHandler = (err, req, res, next) => {
-    console.error('[Error]', err);
+    logger.error(err.message, { stack: err.stack, method: req.method, url: req.url });
 
     // Custom errors thrown from services (with status code)
     if (err.status) {

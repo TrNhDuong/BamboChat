@@ -1,6 +1,7 @@
 const { verifyAccessToken } = require('../utils/jwt');
 const messageService = require('../services/MessageService');
 const participantRepository = require('../repositories/ParticipantRepository');
+const logger = require('../utils/logger');
 
 /**
  * Initialize Socket.IO event handlers.
@@ -31,7 +32,7 @@ const initializeSocket = (io) => {
     // ─────────────────────────────────────────────
     io.on('connection', async (socket) => {
         const userId = socket.user.userId;
-        console.log(`[Socket] User connected: ${userId}`);
+        logger.info(`[Socket] User connected: ${userId}`, { socketId: socket.id });
 
         // Auto-join user to all their conversation rooms
         try {
@@ -40,7 +41,7 @@ const initializeSocket = (io) => {
                 socket.join(p.conversationId.toString());
             }
         } catch (error) {
-            console.error(`[Socket] Error joining rooms for ${userId}:`, error);
+            logger.error(`[Socket] Error joining rooms for ${userId}:`, { error: error.message, stack: error.stack });
         }
 
         // ───────────────────────────────────────────
@@ -65,7 +66,7 @@ const initializeSocket = (io) => {
 
                 if (callback) callback({ success: true, message });
             } catch (error) {
-                console.error('[Socket] send_message error:', error);
+                logger.error('[Socket] send_message error:', { userId, conversationId, error: error.message, stack: error.stack });
                 if (callback) callback({ success: false, error: error.message });
             }
         });
@@ -87,7 +88,32 @@ const initializeSocket = (io) => {
 
                 if (callback) callback({ success: true });
             } catch (error) {
-                console.error('[Socket] mark_read error:', error);
+                logger.error('[Socket] mark_read error:', { userId, conversationId, messageId, error: error.message, stack: error.stack });
+                if (callback) callback({ success: false, error: error.message });
+            }
+        });
+
+        // ───────────────────────────────────────────
+        // Event: send_reaction
+        // Client → Server
+        // ───────────────────────────────────────────
+        socket.on('send_reaction', async ({ messageId, reactionType }, callback) => {
+            try {
+                const result = await messageService.toggleReaction(userId, {
+                    messageId,
+                    reactionType,
+                });
+
+                // Broadcast reaction update to conversation room
+                io.to(result.conversationId.toString()).emit('reaction_update', {
+                    messageId: result.messageId,
+                    conversationId: result.conversationId,
+                    reactions: result.reactions,
+                });
+
+                if (callback) callback({ success: true, reactions: result.reactions });
+            } catch (error) {
+                logger.error('[Socket] send_reaction error:', { userId, messageId, error: error.message, stack: error.stack });
                 if (callback) callback({ success: false, error: error.message });
             }
         });
@@ -108,7 +134,7 @@ const initializeSocket = (io) => {
         // Disconnect
         // ───────────────────────────────────────────
         socket.on('disconnect', () => {
-            console.log(`[Socket] User disconnected: ${userId}`);
+            logger.info(`[Socket] User disconnected: ${userId}`, { socketId: socket.id });
         });
     });
 };

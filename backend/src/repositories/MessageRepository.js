@@ -5,6 +5,10 @@ class MessageRepository {
         return Message.create({ _id: id, conversationId, senderId, content });
     }
 
+    async findById(messageId) {
+        return Message.findById(messageId);
+    }
+
     /**
      * Cursor-based pagination for message history.
      * Uses UUIDv7 _id as cursor — messages are sorted newest first.
@@ -24,6 +28,29 @@ class MessageRepository {
         return Message.find(query)
             .sort({ _id: -1 }) // Newest first (UUIDv7 is time-sortable)
             .limit(limit);
+    }
+
+    async addOrUpdateReaction(messageId, userId, reactionType) {
+        // First, remove any existing reaction from this user to ensure only one reaction per user
+        await Message.updateOne(
+            { _id: messageId },
+            { $pull: { reactions: { userId } } }
+        );
+
+        // Add the new reaction
+        return Message.findOneAndUpdate(
+            { _id: messageId },
+            { $push: { reactions: { userId, type: reactionType } } },
+            { new: true }
+        );
+    }
+
+    async removeReaction(messageId, userId) {
+        return Message.findOneAndUpdate(
+            { _id: messageId },
+            { $pull: { reactions: { userId } } },
+            { new: true }
+        );
     }
 }
 

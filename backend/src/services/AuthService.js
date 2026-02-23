@@ -3,6 +3,7 @@ const otpRepository = require('../repositories/OTPRepository');
 const { hashPassword, comparePassword } = require('../utils/hash');
 const { generateAccessToken, generateRefreshToken } = require('../utils/jwt');
 const { sendMail } = require('../utils/email');
+const logger = require('../utils/logger');
 
 class AuthService {
     /**
@@ -49,9 +50,12 @@ class AuthService {
                 </div>
                 `
             );
+            logger.info(`OTP sent to email: ${email}`);
         } catch (error) {
-            console.error("Failed to send OTP email:", error);
+            logger.error(`Failed to send OTP email to ${email}:`, { error: error.message });
         }
+
+        logger.info(`User registered: ${id}`, { userId: user._id });
 
         return {
             message: 'Registration successful. Please verify your email with the OTP sent.',
@@ -93,6 +97,8 @@ class AuthService {
         }
         await otpRepository.deleteByEmail(email);
 
+        logger.info(`Email verified successfully: ${email}`);
+
         return { message: 'Email verified successfully' };
     }
 
@@ -113,8 +119,11 @@ class AuthService {
 
         const isMatch = await comparePassword(password, user.passwordHash);
         if (!isMatch) {
+            logger.warn(`Login failed: Invalid password for user ID ${id}`);
             throw { status: 401, message: 'Invalid credentials' };
         }
+
+        logger.info(`User logged in: ${id}`, { userId: user._id });
 
         const payload = { userId: user._id, email: user.email };
         const accessToken = generateAccessToken(payload);

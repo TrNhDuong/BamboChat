@@ -66,6 +66,44 @@ class MessageService {
 
         return { conversationId, userId, messageId };
     }
+
+    /**
+     * Add, update, or remove a reaction.
+     */
+    async toggleReaction(userId, { messageId, reactionType }) {
+        // 1. Find message to get conversationId
+        const message = await messageRepository.findById(messageId);
+        if (!message) {
+            throw { status: 404, message: 'Message not found' };
+        }
+
+        // 2. Validate membership
+        const participant = await participantRepository.findByConversationAndUser(
+            message.conversationId,
+            userId
+        );
+        if (!participant) {
+            throw { status: 403, message: 'You are not a member of this conversation' };
+        }
+
+        // 3. Check if user already has this specific reaction
+        const existingReaction = message.reactions.find((r) => r.userId === userId);
+
+        let updatedMessage;
+        if (existingReaction && existingReaction.type === reactionType) {
+            // Same reaction type -> remove it (toggle off)
+            updatedMessage = await messageRepository.removeReaction(messageId, userId);
+        } else {
+            // Different reaction type or no reaction -> add/update (toggle on/update)
+            updatedMessage = await messageRepository.addOrUpdateReaction(messageId, userId, reactionType);
+        }
+
+        return {
+            messageId,
+            conversationId: message.conversationId,
+            reactions: updatedMessage.reactions,
+        };
+    }
 }
 
 module.exports = new MessageService();
