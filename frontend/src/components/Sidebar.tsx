@@ -3,6 +3,7 @@ import type { Conversation } from '../types';
 import { BambooIcon, SettingsIcon, SearchIcon, ChatIcon, PlusIcon } from './Icons';
 import ProfileEdit from './ProfileEdit';
 import CreateGroup from './CreateGroup';
+import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ const Sidebar = ({
     userId,
     onRefreshConversations,
 }: SidebarProps) => {
+    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [showProfileEdit, setShowProfileEdit] = useState(false);
     const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -41,6 +43,19 @@ const Sidebar = ({
             }
         }
         return 'Direct Message';
+    };
+
+    const getConversationAvatar = (conv: Conversation) => {
+        if (conv.type === 'direct_message' && conv.participants && Array.isArray(conv.participants)) {
+            const other = conv.participants.find((p: any) => {
+                const pId = typeof p === 'string' ? p : p?._id;
+                return pId !== userId;
+            });
+            if (other && typeof other !== 'string' && (other as any).avatar?.url) {
+                return (other as any).avatar.url as string;
+            }
+        }
+        return null;
     };
 
     const getAvatarLetter = (conv: Conversation) => {
@@ -96,8 +111,17 @@ const Sidebar = ({
                         className="settings-btn"
                         title="Edit Profile"
                         onClick={() => setShowProfileEdit(true)}
+                        style={{ padding: 0, overflow: 'hidden', borderRadius: '50%', width: 32, height: 32 }}
                     >
-                        <SettingsIcon size={18} />
+                        {user?.avatar?.url ? (
+                            <img
+                                src={user.avatar.url}
+                                alt="avatar"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                            />
+                        ) : (
+                            <SettingsIcon size={18} />
+                        )}
                     </button>
                 </div>
             </div>
@@ -159,7 +183,17 @@ const Sidebar = ({
                                 className={`conversation-item ${activeConversation === conv._id ? 'active' : ''}`}
                                 onClick={() => onSelectConversation(conv._id)}
                             >
-                                <div className="conversation-avatar">{getAvatarLetter(conv)}</div>
+                                <div className="conversation-avatar">
+                                    {conv.type === 'direct_message' && getConversationAvatar(conv) ? (
+                                        <img
+                                            src={getConversationAvatar(conv)!}
+                                            alt="avatar"
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                        />
+                                    ) : (
+                                        getAvatarLetter(conv)
+                                    )}
+                                </div>
                                 <div className="conversation-info">
                                     <div className="conversation-top-row">
                                         <div className="conversation-name">{getConversationName(conv)}</div>

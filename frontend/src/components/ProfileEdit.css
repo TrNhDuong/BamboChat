@@ -18,9 +18,89 @@
     padding: 32px;
     box-shadow: var(--shadow-xl);
     animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-/* ... existing styles ... */
+/* ─── Avatar Section ─── */
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.avatar-preview {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    cursor: pointer;
+    overflow: hidden;
+    background: var(--bambo-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 3px solid var(--border);
+    transition: border-color var(--transition);
+}
+
+.avatar-preview:hover {
+    border-color: var(--bambo-green);
+}
+
+.avatar-preview.avatar-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 50%;
+}
+
+.avatar-preview:hover .avatar-overlay,
+.avatar-preview.avatar-loading .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay-text {
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 0 6px;
+    letter-spacing: 0.3px;
+}
+
+.avatar-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+}
 
 .settings-divider {
     font-size: 0.7rem;

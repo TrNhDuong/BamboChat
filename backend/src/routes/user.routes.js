@@ -10,4 +10,7 @@ router.get('/search', authMiddleware, userController.search);
 // PUT /api/users/profile
 router.put('/profile', authMiddleware, userController.updateProfile);
 
+// POST /api/users/avatar
+router.post('/avatar', authMiddleware, (req, res, next) => userController.uploadAvatarHandler(req, res, next));
+
 module.exports = router;

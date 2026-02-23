@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema(
             trim: true,
             maxlength: [160, 'Bio cannot exceed 160 characters'],
         },
+        avatar: {
+            url: { type: String, default: null },
+            public_id: { type: String, default: null },
+        },
         googleId: {
             type: String,
             unique: true,

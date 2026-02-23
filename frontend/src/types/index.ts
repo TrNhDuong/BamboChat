@@ -5,6 +5,7 @@ export interface User {
     bio?: string;
     isVerified?: boolean;
     createdAt?: string;
+    avatar?: { url: string; public_id: string };
 }
 
 export interface LoginResponse {
@@ -22,7 +23,7 @@ export interface Conversation {
     _id: string;
     type: 'direct_message' | 'group';
     name: string | null;
-    participants: { _id: string; displayName: string | null }[];
+    participants: { _id: string; displayName: string | null; avatar?: { url: string; public_id: string } | null }[];
     lastMessage?: {
         content: string;
         createdAt: string;

@@ -49,12 +49,17 @@ export const userAPI = {
 
     updateProfile: (data: { displayName?: string; bio?: string }) =>
         api.put<User>('/users/profile', data),
+
+    uploadAvatar: (formData: FormData) =>
+        api.post<User>('/users/avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
 };
 
 // ─── Friends ─────────────────────────────────
 export const friendAPI = {
     getFriends: () =>
-        api.get<string[]>('/friends'),
+        api.get<User[]>('/friends'),
 
     getPendingRequests: () =>
         api.get<Friendship[]>('/friends/requests/pending'),

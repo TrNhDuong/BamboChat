@@ -21,6 +21,10 @@ class UserRepository {
         return User.findByIdAndUpdate(id, { displayName, bio }, { new: true, runValidators: true });
     }
 
+    async updateAvatar(id, avatar) {
+        return User.findByIdAndUpdate(id, { avatar }, { new: true });
+    }
+
     async searchById(partialId) {
         // Case-insensitive partial match, hide sensitive fields
         return User.find(

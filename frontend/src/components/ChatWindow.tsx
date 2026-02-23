@@ -13,7 +13,7 @@ interface ChatWindowProps {
     userId: string;
     isFriend: boolean;
     isDirectMessage: boolean;
-    participants: { _id: string; displayName: string | null }[];
+    participants: { _id: string; displayName: string | null; avatar?: { url: string; public_id: string } | null }[];
 }
 
 const ChatWindow = ({
@@ -158,9 +158,24 @@ const ChatWindow = ({
         <div className="chat-window">
             <div className="chat-header">
                 <div className="chat-header-avatar">
-                    {typeof conversationName === 'string' && conversationName.length > 0
-                        ? conversationName.charAt(0).toUpperCase()
-                        : '?'}
+                    {isDirectMessage ? (() => {
+                        const otherParticipant = participants.find(p => p._id !== userId);
+                        return otherParticipant?.avatar?.url ? (
+                            <img
+                                src={otherParticipant.avatar.url}
+                                alt={conversationName}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                            />
+                        ) : (
+                            typeof conversationName === 'string' && conversationName.length > 0
+                                ? conversationName.charAt(0).toUpperCase()
+                                : '?'
+                        );
+                    })() : (
+                        typeof conversationName === 'string' && conversationName.length > 0
+                            ? conversationName.charAt(0).toUpperCase()
+                            : '?'
+                    )}
                 </div>
                 <div className="chat-header-info">
                     <div className="chat-header-name-row">
@@ -223,10 +238,15 @@ const ChatWindow = ({
                 ) : (
                     messages.map((msg, index) => {
                         const prevMsg = messages[index - 1];
-                        const showAvatar = !isSent(msg) && (!prevMsg || prevMsg.senderId !== msg.senderId);
+                        const nextMsg = messages[index + 1];
+
+                        const isFirstInGroup = !prevMsg || prevMsg.senderId !== msg.senderId;
+                        const isLastInGroup = !nextMsg || nextMsg.senderId !== msg.senderId;
+                        const showAvatar = !isSent(msg) && isFirstInGroup;
 
                         const sender = participants.find(p => p._id === msg.senderId);
                         const senderName = sender?.displayName || msg.senderId;
+                        const avatarUrl = sender?.avatar?.url;
 
                         function isSent(m: Message) {
                             return m.senderId === userId;
@@ -239,6 +259,10 @@ const ChatWindow = ({
                                 isSent={isSent(msg)}
                                 showAvatar={showAvatar}
                                 senderName={senderName}
+                                avatarUrl={avatarUrl}
+                                isDirectMessage={isDirectMessage}
+                                isFirstInGroup={isFirstInGroup}
+                                isLastInGroup={isLastInGroup}
                             />
                         );
                     })

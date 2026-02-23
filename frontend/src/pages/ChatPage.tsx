@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { conversationAPI, friendAPI } from '../services/api';
-import type { Conversation } from '../types';
+import type { Conversation, User } from '../types';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import FriendPanel from '../components/FriendPanel';
@@ -14,7 +14,7 @@ const ChatPage = () => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversation, setActiveConversation] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'chats' | 'friends'>('chats');
-    const [friends, setFriends] = useState<string[]>([]);
+    const [friends, setFriends] = useState<User[]>([]);
 
     const loadConversations = useCallback(async () => {
         try {
@@ -84,7 +84,7 @@ const ChatPage = () => {
 
     const isFriend = (otherUserId: string | null): boolean => {
         if (!otherUserId) return false;
-        return friends.includes(otherUserId);
+        return friends.some((f) => f._id === otherUserId);
     };
 
     const handleStartChat = async (otherUserId: string) => {

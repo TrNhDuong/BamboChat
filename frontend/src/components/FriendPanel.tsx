@@ -8,8 +8,29 @@ interface FriendPanelProps {
     onChatWithUser: (userId: string) => void;
 }
 
+/** Render a circular avatar — image if available, otherwise initial letter */
+const Avatar = ({ user, size = 40 }: { user: { _id: string; displayName?: string | null; avatar?: { url: string } | null }; size?: number }) => {
+    const letter = (user.displayName || user._id).charAt(0).toUpperCase();
+    return (
+        <div
+            className="friend-avatar"
+            style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}
+        >
+            {user.avatar?.url ? (
+                <img
+                    src={user.avatar.url}
+                    alt={user.displayName || user._id}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+            ) : (
+                letter
+            )}
+        </div>
+    );
+};
+
 const FriendPanel = ({ onChatWithUser }: FriendPanelProps) => {
-    const [friends, setFriends] = useState<string[]>([]);
+    const [friends, setFriends] = useState<User[]>([]);
     const [pendingRequests, setPendingRequests] = useState<Friendship[]>([]);
     const [sentRequests, setSentRequests] = useState<Friendship[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -137,7 +158,10 @@ const FriendPanel = ({ onChatWithUser }: FriendPanelProps) => {
                 <div className="search-results">
                     {searchResults.map((user) => (
                         <div key={user._id} className="search-result-item">
-                            <span>{user._id} ({user.email})</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Avatar user={user} size={32} />
+                                <span>{user._id}{user.displayName ? ` (${user.displayName})` : ` (${user.email})`}</span>
+                            </div>
                             <button
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => handleSendRequest(user._id)}
@@ -205,23 +229,28 @@ const FriendPanel = ({ onChatWithUser }: FriendPanelProps) => {
             {friends.length === 0 ? (
                 <div className="friend-empty">Chưa có bạn bè. Hãy tìm kiếm người dùng bên trên!</div>
             ) : (
-                friends.map((friendId) => (
-                    <div key={friendId} className="friend-item">
+                friends.map((friend) => (
+                    <div key={friend._id} className="friend-item">
                         <div className="friend-item-info">
-                            <div className="friend-avatar">{friendId.charAt(0).toUpperCase()}</div>
-                            <div className="friend-name">{friendId}</div>
+                            <Avatar user={friend} size={40} />
+                            <div>
+                                <div className="friend-name">{friend.displayName || friend._id}</div>
+                                {friend.displayName && (
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{friend._id}</div>
+                                )}
+                            </div>
                         </div>
                         <div className="friend-actions">
                             <button
                                 className="btn btn-ghost btn-sm"
                                 style={{ marginRight: 8 }}
-                                onClick={() => onChatWithUser(friendId)}
+                                onClick={() => onChatWithUser(friend._id)}
                             >
                                 <ChatIcon size={16} /> Nhắn tin
                             </button>
                             <button
                                 className="btn btn-danger btn-sm"
-                                onClick={() => handleUnfriend(friendId)}
+                                onClick={() => handleUnfriend(friend._id)}
                             >
                                 Unfriend
                             </button>

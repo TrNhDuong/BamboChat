@@ -9,6 +9,10 @@ interface MessageBubbleProps {
     isSent: boolean;
     showAvatar: boolean;
     senderName?: string;
+    avatarUrl?: string;
+    isDirectMessage?: boolean;
+    isFirstInGroup?: boolean;
+    isLastInGroup?: boolean;
 }
 
 const REACTION_TYPES = [
@@ -19,7 +23,7 @@ const REACTION_TYPES = [
     { type: 'angry', emoji: '😡' },
 ];
 
-const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbleProps) => {
+const MessageBubble = ({ message, isSent, showAvatar, senderName, avatarUrl, isDirectMessage, isFirstInGroup, isLastInGroup }: MessageBubbleProps) => {
     const [showPicker, setShowPicker] = useState(false);
 
     const formatTime = (dateStr: string) => {
@@ -78,7 +82,15 @@ const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbl
                 <div className="message-avatar-container">
                     {showAvatar ? (
                         <div className="message-avatar" title={senderName || message.senderId}>
-                            {avatarLetter}
+                            {avatarUrl ? (
+                                <img
+                                    src={avatarUrl}
+                                    alt={senderName || message.senderId}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                />
+                            ) : (
+                                avatarLetter
+                            )}
                         </div>
                     ) : (
                         <div className="message-avatar-spacer" />
@@ -92,8 +104,17 @@ const MessageBubble = ({ message, isSent, showAvatar, senderName }: MessageBubbl
 
             {/* Bubble */}
             <div className="message-content-container">
-                <div className="message-bubble">
-                    {!isSent && senderName && <div className="sender-name">{senderName}</div>}
+                <div className={`message-bubble ${isSent
+                        ? isFirstInGroup && isLastInGroup ? '' // solo: fully rounded (default)
+                            : isFirstInGroup ? 'sent-first' // first in group
+                                : isLastInGroup ? 'sent-last'   // last in group
+                                    : 'sent-middle'                 // middle
+                        : isFirstInGroup && isLastInGroup ? '' // solo
+                            : isFirstInGroup ? 'recv-first'
+                                : isLastInGroup ? 'recv-last'
+                                    : 'recv-middle'
+                    }`}>
+                    {!isSent && senderName && !isDirectMessage && <div className="sender-name">{senderName}</div>}
                     <div>{message.content}</div>
 
                     {Object.keys(reactionGroups).length > 0 && (

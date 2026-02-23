@@ -76,7 +76,21 @@ class FriendService {
             f.requesterId === userId ? f.addresseeId : f.requesterId
         );
 
-        return friendIds;
+        // Fetch full user objects so the frontend can display avatars / displayNames
+        const users = await Promise.all(
+            friendIds.map((id) => userRepository.findById(id))
+        );
+
+        // Filter nulls and strip passwordHash
+        return users
+            .filter(Boolean)
+            .map((u) => ({
+                _id: u._id,
+                email: u.email,
+                displayName: u.displayName || null,
+                avatar: u.avatar || null,
+                isVerified: u.isVerified,
+            }));
     }
 
     /**
