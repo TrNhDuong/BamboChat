@@ -40,5 +40,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'BamboChat'
-
           images: 'bambochat.azurecr.io/bambochat-backend:${{ github.sha }}'
