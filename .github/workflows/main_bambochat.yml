@@ -24,7 +24,7 @@ jobs:
 
       - name: Build and Push to ACR
         run: |
-          az acr build --registry BamboChat --resource-group bambo_project --image bambochat-backend:${{ github.sha }} .
+          az acr build --registry BamboChat --resource-group bambo-project --image bambochat-backend:${{ github.sha }} .
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
