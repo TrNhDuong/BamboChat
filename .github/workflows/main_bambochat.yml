@@ -1,4 +1,4 @@
-name: Azure CI/CD - BamboChat (Secure OIDC)
+name: Azure CI/CD - BamboChat (Native CLI Deployment)
 
 on:
   push:
@@ -9,7 +9,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
-    # Quyền bắt buộc để OIDC hoạt động với Azure
+    # Quyền bắt buộc để OIDC xác thực với Azure
     permissions:
       id-token: write
       contents: read
@@ -25,19 +25,30 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3558C1101D314EF4977E5D0259239D15 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AD104B5EF71B4D6981B90E9A18949256 }}
 
-      - name: Build and Push Docker Image (Native)
+      - name: Build and Push Docker Image (Local Build)
         run: |
-          # 1. Đăng nhập Docker client vào ACR bằng Token của Service Principal (Đã có quyền Contributor)
+          # Đăng nhập Docker cục bộ vào ACR
           az acr login --name BamboChat
           
-          # 2. Build image ngay trên máy ảo của GitHub Actions
+          # Build image trên máy ảo GitHub (né lỗi TasksOperationsNotAllowed)
           docker build -t bambochat.azurecr.io/bambochat-backend:${{ github.sha }} .
           
-          # 3. Đẩy image thành phẩm lên kho lưu trữ Azure Container Registry
+          # Đẩy image lên kho lưu trữ
           docker push bambochat.azurecr.io/bambochat-backend:${{ github.sha }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'BamboChat'
-          images: 'bambochat.azurecr.io/bambochat-backend:${{ github.sha }}'
+      - name: Deploy to Azure Web App (Native CLI)
+        run: |
+          # 1. Bật quyền Admin cho ACR để Web App có thể truy cập bằng mật khẩu
+          az acr update --name BamboChat --admin-enabled true
+          
+          # 2. Lấy mật khẩu truy cập của ACR
+          ACR_PASSWORD=$(az acr credential show --name BamboChat --query "passwords[0].value" -o tsv)
+          
+          # 3. Ép Web App cập nhật Image mới (Chỉ đích danh Resource Group để né lỗi "doesn't exist")
+          az webapp config container set \
+            --name BamboChat \
+            --resource-group bambo-project \
+            --docker-custom-image-name bambochat.azurecr.io/bambochat-backend:${{ github.sha }} \
+            --docker-registry-server-url https://bambochat.azurecr.io \
+            --docker-registry-server-user BamboChat \
+            --docker-registry-server-password $ACR_PASSWORD
