@@ -8,26 +8,33 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    
+    # Quyền bắt buộc để OIDC hoạt động với Azure
     permissions:
       id-token: write
       contents: read
-
+      
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-      - name: Azure Login
+      - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4EC2201E3BE44323812FEF09A55A920C }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3558C1101D314EF4977E5D0259239D15 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AD104B5EF71B4D6981B90E9A18949256 }}
 
-      - name: Build and Push to ACR
+      - name: Build and Push Docker Image (Native)
         run: |
-          az account show
+          # 1. Đăng nhập Docker client vào ACR bằng Token của Service Principal (Đã có quyền Contributor)
+          az acr login --name BamboChat
           
-          # 2. Truy vết giao tiếp mạng: Bật cờ --debug
-          az acr build --registry BamboChat --resource-group bambo_project --image bambochat-backend:${{ github.sha }} . --debug
+          # 2. Build image ngay trên máy ảo của GitHub Actions
+          docker build -t bambochat.azurecr.io/bambochat-backend:${{ github.sha }} .
+          
+          # 3. Đẩy image thành phẩm lên kho lưu trữ Azure Container Registry
+          docker push bambochat.azurecr.io/bambochat-backend:${{ github.sha }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
