@@ -57,6 +57,7 @@ For deeper technical insights, please refer to the documents in the `doc/` direc
 3.  [**Database Design**](doc/database_design.md): Schema structures and data relationships.
 4.  [**Authentication Flow**](doc/authentication.md): Details on JWT, OTP, and Google Login.
 5.  [**WebSocket Flow**](doc/websocket_flow.md): How real-time messaging and status updates work.
+6.  [**Azure Deployment**](doc/azure_deployment.md): Guide to deploying the containerized backend to Azure.
 
 ---
 

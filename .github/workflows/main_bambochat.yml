@@ -1,0 +1,33 @@
+name: Azure CI/CD - BamboChat (OIDC Secure)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4EC2201E3BE44323812FEF09A55A920C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3558C1101D314EF4977E5D0259239D15 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AD104B5EF71B4D6981B90E9A18949256 }}
+
+      - name: Build and Push to ACR
+        run: |
+          az acr build --registry BamboChat --resource-group bambo_project --image bambochat-backend:${{ github.sha }} .
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'BamboChat'
+          images: 'bambochat.azurecr.io/bambochat-backend:${{ github.sha }}'
