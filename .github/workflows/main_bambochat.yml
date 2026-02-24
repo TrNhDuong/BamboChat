@@ -27,10 +27,11 @@ jobs:
           az account show
           
           # 2. Truy vết giao tiếp mạng: Bật cờ --debug
-          az acr build --registry BamboChat --resource-group bambo_project --image bambochat-backend:${{ github.sha }} . --debug
+          az acr build --registry BamboChat --resource-group bambo-project --image bambochat-backend:${{ github.sha }} . --debug
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'BamboChat'
+
           images: 'bambochat.azurecr.io/bambochat-backend:${{ github.sha }}'
